@@ -1,0 +1,43 @@
+# DROP THE DECK — L2 broadcast publisher (bible §11.2, §11.10).
+# Copy this file to .github/workflows/feed.yml in a SEPARATE public repository that serves GitHub Pages (Settings > Pages:
+# "GitHub Actions"). Every 10 minutes it pulls the Crossfade server's rendered feeds and publishes them with
+# config.json, so every instance can read them from a TRUSTED *.github.io URL without enabling untrusted URLs.
+# The server holds no GitHub token: this workflow pulls.
+#
+# Repository variable (Settings > Secrets and variables > Actions > Variables):
+#   DTD_API   https://api.<your-domain>    (the Crossfade server's base URL)
+name: feed
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull the feeds
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          cp feed/config.json site/config.json
+          for f in charts.json charts.png ghosts.json season.json; do
+            curl -fsS --max-time 30 "${{ vars.DTD_API }}/l2/$f" -o "site/$f.tmp"
+            mv "site/$f.tmp" "site/$f"
+          done
+          # iOS truncates responses over ~800 KB (bible §11.1)
+          find site -type f -size +780k -print -exec false {} +
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4

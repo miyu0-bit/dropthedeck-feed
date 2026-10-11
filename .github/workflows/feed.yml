@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           mkdir -p site
           cp feed/config.json site/config.json
-          for f in charts.json charts.png ghosts.json season.json; do
+          for f in charts.json charts.png ghosts.json season.json ticker.json; do
             curl -fsS --max-time 30 "${{ vars.DTD_API }}/l2/$f" -o "site/$f.tmp"
             mv "site/$f.tmp" "site/$f"
           done

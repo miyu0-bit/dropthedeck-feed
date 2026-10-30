@@ -34,6 +34,11 @@ jobs:
             curl -fsS --max-time 30 "${{ vars.DTD_API }}/l2/$f" -o "site/$f.tmp"
             mv "site/$f.tmp" "site/$f"
           done
+          # the sponsor ad rotation (the website's world feed): the world's AdScreens read ads.txt + ads.jpg from here
+          for f in ads.txt ads.jpg; do
+            curl -fsS --max-time 30 "${{ vars.DTD_WEB }}/api/world/$f" -o "site/$f.tmp"
+            mv "site/$f.tmp" "site/$f"
+          done
           # iOS truncates responses over ~800 KB (bible §11.1)
           find site -type f -size +780k -print -exec false {} +
       - uses: actions/configure-pages@v5
